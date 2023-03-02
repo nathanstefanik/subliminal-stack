@@ -21,7 +21,7 @@ const bucket = 'subliminal-stack';
 app.use(cors({credentials:true,origin:'http://localhost:3000'}));
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads', express.static(__dirname + '/uploads'));
+app.use('/api/uploads', express.static(__dirname + '/api/uploads'));
 
 //mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.jgjfzkv.mongodb.net/?retryWrites=true&w=majority`)
 
@@ -46,7 +46,7 @@ async function uploadToS3(path, originalFileName, mimetype) {
   return `https://${bucket}.s3.amazonaws.com/${newFileName}` 
 }
 
-app.post('/register', async (req,res) => {
+app.post('/api/register', async (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   const {username,password} = req.body;
   try{
@@ -61,7 +61,7 @@ app.post('/register', async (req,res) => {
   }
 });
 
-app.post('/login', async (req,res) => {
+app.post('/api/login', async (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   const {username,password} = req.data;
   const userDoc = await User.findOne({username});
@@ -79,7 +79,7 @@ app.post('/login', async (req,res) => {
   }
 });
 
-app.get('/profile', (req,res) => {
+app.get('/api/profile', (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   const {token} = req.cookies
   jwt.verify(token, secret, {}, (err,info) => {
@@ -88,12 +88,12 @@ app.get('/profile', (req,res) => {
   });
 });
 
-app.post('/logout', (req,res) => {
+app.post('/api/logout', (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   res.cookie('token', '').json('ok');
 });
 
-app.post('/post', uploadMiddleware.single('files'), async (req,res) => {
+app.post('/api/post', uploadMiddleware.single('files'), async (req,res) => {
 
   mongoose.connect(process.env.MONGO_URL);
   const {originalname,path,mimetype} = req.file;
@@ -113,7 +113,7 @@ app.post('/post', uploadMiddleware.single('files'), async (req,res) => {
   });
 });
 
-app.put('/post', uploadMiddleware.single('file'), async (req,res) => {
+app.put('/api/post', uploadMiddleware.single('file'), async (req,res) => {
 
   mongoose.connect(process.env.MONGO_URL);
   let url = null;
@@ -146,7 +146,7 @@ app.put('/post', uploadMiddleware.single('file'), async (req,res) => {
 
 });
 
-app.get('/post', async (req,res) => {
+app.get('/api/post', async (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   res.json(await Post.find()
     .populate('author', ['username'])
@@ -155,7 +155,7 @@ app.get('/post', async (req,res) => {
   );
 });
 
-app.get('/post/:id', async (req,res) => {
+app.get('/api/post/:id', async (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   const {id} = req.params;
   const postDoc = await Post.findById(id).populate('author', ['username']);
